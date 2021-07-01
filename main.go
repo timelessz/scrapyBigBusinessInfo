@@ -22,9 +22,9 @@ func getDB() *gorm.DB {
 }
 
 // 获取limit offset 指定数量客户
-func getLimitCustomer(limit int, offset int, db *gorm.DB) []Customer {
-	var customers []Customer
-	if err := db.Where("website != ? AND mxrecord = ?", "", "").Offset(offset).Limit(limit).Find(&customers).Error; err != nil {
+func getLimitCustomer(limit int, offset int, db *gorm.DB) []customer {
+	var customers []customer
+	if err := db.Where("Domain != ? AND mxrecord = ?", "", "").Order("id desc").Offset(offset).Limit(limit).Find(&customers).Error; err != nil {
 		// 数据报错
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 返回空数组
@@ -52,7 +52,6 @@ type MxSuffix struct {
 }
 
 // map
-
 // 获取limit 客户数据
 func GetCrmSuffixData(crmdb *gorm.DB) map[string]MxSuffix {
 	suffixMap := make(map[string]MxSuffix)
@@ -89,7 +88,7 @@ func setScrapyFlag(offset int, limit int) bool {
 	return writeFile(sInfo)
 }
 
-func produce(ch chan<- Customer, wg *sync.WaitGroup) {
+func produce(ch chan<- customer, wg *sync.WaitGroup) {
 	db := getDB()
 	for true {
 		offset, limit := getScrapyFlag()
@@ -101,7 +100,7 @@ func produce(ch chan<- Customer, wg *sync.WaitGroup) {
 			continue
 		}
 		for _, customer := range customers {
-			fmt.Println("生产者：" + string(customer.ID) + customer.EnName.String + customer.Website.String)
+			fmt.Println("生产者：" + string(customer.ID) + customer.Name.String + customer.Domain.String)
 			ch <- customer
 		}
 		// 设置已经爬取到的数据
@@ -110,19 +109,19 @@ func produce(ch chan<- Customer, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func consumer(ch <-chan Customer, wg *sync.WaitGroup, suffixMap map[string]MxSuffix, i int) {
+func consumer(ch <-chan customer, wg *sync.WaitGroup, suffixMap map[string]MxSuffix, i int) {
 	db := getDB()
 	for true {
 		v := <-ch
-		if v.Website.String == "" {
+		if v.Domain.String == "" {
 			// website 为空
 			continue
 		}
-		domain := getUrlTldDomain(v.Website.String)
+		domain := v.Domain.String
 		mxrecord := execDigCommand(domain)
 		if mxrecord == "" {
 			// website 获取数据为空
-			fmt.Println(v.EnName.String + v.Website.String + "获取MXRECORD为空")
+			fmt.Println(v.Name.String + v.Domain.String + "获取MXRECORD为空")
 		}
 		suffix := analyseMxRecord(mxrecord)
 		if suffix == "" {
@@ -144,9 +143,9 @@ func main() {
 	MxSuffix := GetCrmSuffixData(crmdb)
 	// init database pool
 	var wg sync.WaitGroup
-	consumerCount := 1
+	consumerCount := 20
 	wg.Add(consumerCount)
-	var ch = make(chan Customer, consumerCount)
+	var ch = make(chan customer, consumerCount)
 	go produce(ch, &wg)
 	for i := 0; i < consumerCount; i++ {
 		go consumer(ch, &wg, MxSuffix, i+1)

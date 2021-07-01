@@ -63,27 +63,25 @@ func getMxRecordSuffix(suffixMap map[string]MxSuffix, suffix string) (MxSuffix, 
 	return MxSuffix{}, errors.New("未匹配到MX数据")
 }
 
-func saveCustomerMxInfo(db *gorm.DB, mss MxSuffix, domain string, v Customer, mxrecord string, i int) {
-	fmt.Println(strconv.Itoa(i) + "号消费者：" + v.Website.String + " 域名：" + domain + " 获取mx:" + mxrecord)
+func saveCustomerMxInfo(db *gorm.DB, mss MxSuffix, domain string, v customer, mxrecord string, i int) {
+	fmt.Println(strconv.Itoa(i) + "号消费者：" + v.Name.String + " 域名：" + domain + " 获取mx:" + mxrecord)
 	if mss != (MxSuffix{}) {
 		// 判断非空 struct 表示匹配到mx 情况
 		BId, _ := strconv.ParseInt(mss.BId, 10, 64)
-		if v.MxBrandId.Int64 != BId {
+		if v.MxBrandID.Int64 != BId {
 			//更新数据
-			v.MxBrandId.Int64 = BId
+			v.MxBrandID.Int64 = BId
 			v.MxBrandName.String = mss.Name
-			v.Domain.String = domain
 			v.Mxrecord.String = mxrecord
 			db.Save(v)
-			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Website.String + "保存mx信息，匹配到邮箱品牌，品牌：" + mss.Name)
+			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Domain.String + "保存mx信息，匹配到邮箱品牌，品牌：" + mss.Name)
 		}
 	} else {
 		// 判断 struct 为空 未匹配到品牌
 		if v.Mxrecord.String != mxrecord {
-			v.Domain.String = domain
 			v.Mxrecord.String = mxrecord
 			db.Save(v)
-			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Website.String + "保存mx信息，未匹配到邮箱品牌。")
+			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Domain.String + "保存mx信息，未匹配到邮箱品牌。")
 		}
 	}
 }

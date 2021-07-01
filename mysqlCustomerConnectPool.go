@@ -33,8 +33,8 @@ func GetInstance() *MysqlConnectiPool {
  */
 func (m *MysqlConnectiPool) InitDataPool() (issucc bool) {
 	var MysqlHost string = "rdsfjnifbfjnifbo.mysql.rds.aliyuncs.com"
-	var MysqlDbname string = "madeinchina"
-	var MysqLUser string = "madeinchina"
+	var MysqlDbname string = "bigbusiness"
+	var MysqLUser string = "bigbusiness"
 	var MysqlPasswd string = "LiuRui123$%^"
 	linkStr := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8&parseTime=True&loc=Local", MysqLUser, MysqlPasswd, MysqlHost, MysqlDbname)
 	db, err_db = gorm.Open("mysql", linkStr)
@@ -48,7 +48,6 @@ func (m *MysqlConnectiPool) InitDataPool() (issucc bool) {
 	//defer db.Close()
 	return true
 }
-
 
 /*
 * @fuc  对外获取数据库连接对象db
