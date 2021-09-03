@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"log"
 	"os"
+	"regexp"
 	"sync"
 )
 
@@ -24,7 +25,7 @@ func getDB() *gorm.DB {
 // 获取limit offset 指定数量客户
 func getLimitCustomer(limit int, offset int, db *gorm.DB) []customer {
 	var customers []customer
-	if err := db.Where("Domain != ? AND mxrecord = ?", "", "").Order("id desc").Offset(offset).Limit(limit).Find(&customers).Error; err != nil {
+	if err := db.Where("URL != ? AND mxrecord = ?", "", "").Order("id desc").Offset(offset).Limit(limit).Find(&customers).Error; err != nil {
 		// 数据报错
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 返回空数组
@@ -113,11 +114,17 @@ func consumer(ch <-chan customer, wg *sync.WaitGroup, suffixMap map[string]MxSuf
 	db := getDB()
 	for true {
 		v := <-ch
+		// 截取小域名 公司域名未截取；
+		domain := subDomain(v)
 		if v.Domain.String == "" {
 			// website 为空
 			continue
 		}
-		domain := v.Domain.String
+		if v.Domain.String != domain {
+			//保存下  重新获取到的域名
+			v.Domain.String = domain
+			saveCustomerDomain(db, domain, v, i)
+		}
 		mxrecord := execDigCommand(domain)
 		if mxrecord == "" {
 			// website 获取数据为空
@@ -138,12 +145,49 @@ func consumer(ch <-chan customer, wg *sync.WaitGroup, suffixMap map[string]MxSuf
 	wg.Done()
 }
 
+// 截取出域名
+func subDomain(v customer) string {
+	if v.URL.String == "" {
+		return ""
+	}
+	domains := execSubDmmain(v.URL.String)
+	domain := ""
+	if len(domains) >= 1 {
+		domain = domains[0]
+	}
+	return domain
+}
+
+// 截取域名
+func execSubDmmain(url string) []string {
+	if url == "" {
+		return nil
+	}
+	pattern := "[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\\.?"
+	r, _ := regexp.Compile(pattern)
+	urls := r.FindAllString(url, -1)
+	domains := make([]string, 0)
+	tempMap := map[string]byte{} // 存放不重复主键
+	for _, value := range urls {
+		domain := getDomainTldDomain(value)
+		if domain == "" {
+			continue
+		}
+		l := len(tempMap)
+		tempMap[domain] = 0    //当e存在于tempMap中时，再次添加是添加不进去的，，因为key不允许重复
+		if len(tempMap) != l { // 加入map后，map长度变化，则元素不重复
+			domains = append(domains, domain)
+		}
+	}
+	return domains
+}
+
 func main() {
 	crmdb := getCrmDb()
 	MxSuffix := GetCrmSuffixData(crmdb)
 	// init database pool
 	var wg sync.WaitGroup
-	consumerCount := 20
+	consumerCount := 50
 	wg.Add(consumerCount)
 	var ch = make(chan customer, consumerCount)
 	go produce(ch, &wg)

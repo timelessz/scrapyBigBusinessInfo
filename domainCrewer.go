@@ -11,12 +11,23 @@ import (
 	"strings"
 )
 
+// 截取 mx 后缀的主域名
 func getUrlTldDomain(urls string) string {
 	u, err := url.Parse(urls)
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 	_, domain, err := gotld.GetTld("http://" + u.Host)
+	if nil != err {
+		fmt.Println(err)
+		return ""
+	}
+	return domain
+}
+
+// 截取url 对应的 域名
+func getDomainTldDomain(urls string) string {
+	_, domain, err := gotld.GetTld(urls)
 	if nil != err {
 		fmt.Println(err)
 		return ""
@@ -84,4 +95,10 @@ func saveCustomerMxInfo(db *gorm.DB, mss MxSuffix, domain string, v customer, mx
 			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Domain.String + "保存mx信息，未匹配到邮箱品牌。")
 		}
 	}
+}
+
+// 保存客户域名
+func saveCustomerDomain(db *gorm.DB, domain string, v customer, i int) {
+	fmt.Println(strconv.Itoa(i) + "号消费者：" + v.Name.String + "更新域名：" + domain)
+	db.Save(v)
 }
