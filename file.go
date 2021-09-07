@@ -13,10 +13,8 @@ type ScrapyInfo struct {
 	Limit  int `json:"limit"`
 }
 
-var fileName string = "lock.txt"
-
 // 读取 文件到数据库中
-func readFile() ScrapyInfo {
+func readFile(fileName string) ScrapyInfo {
 	absPath, _ := filepath.Abs(fileName)
 	file, err := os.Open(absPath)
 	if err != nil {
@@ -35,7 +33,7 @@ func readFile() ScrapyInfo {
 }
 
 // 写文件 到数据库中
-func writeFile(sinfo ScrapyInfo) bool {
+func writeFile(fileName string, sinfo ScrapyInfo) bool {
 	//s, _ := json.Marshal(sinfo)
 	//fmt.Println(string(s))
 	fileContent, _ := json.Marshal(sinfo)

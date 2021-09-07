@@ -84,16 +84,41 @@ func saveCustomerMxInfo(db *gorm.DB, mss MxSuffix, domain string, v customer, mx
 			v.MxBrandID.Int64 = BId
 			v.MxBrandName.String = mss.Name
 			v.Mxrecord.String = mxrecord
-			db.Save(v)
 			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Domain.String + "保存mx信息，匹配到邮箱品牌，品牌：" + mss.Name)
+			db.Save(v)
 		}
 	} else {
 		// 判断 struct 为空 未匹配到品牌
 		if v.Mxrecord.String != mxrecord {
 			v.Mxrecord.String = mxrecord
-			db.Save(v)
 			fmt.Println(strconv.Itoa(i) + "消费者：" + v.Domain.String + "保存mx信息，未匹配到邮箱品牌。")
+			db.Save(v)
 		}
+	}
+}
+
+func saveCustomerInfo(db *gorm.DB, v customer, mailTitle string, selfBuildBrandId int, selfbuildBrandName string, domainTitle string, contactBrandId int, contactBrandName string) {
+	changeSatus := false
+	if v.MailTitle.String != mailTitle {
+		v.MailTitle.String = mailTitle
+		changeSatus = true
+	}
+	if v.Title.String != domainTitle {
+		v.Title.String = domainTitle
+		changeSatus = true
+	}
+	if v.SelfbuildBrandID.Int64 != int64(selfBuildBrandId) {
+		v.SelfbuildBrandID.Int64 = int64(selfBuildBrandId)
+		v.SelfbuildBrandName.String = selfbuildBrandName
+		changeSatus = true
+	}
+	if v.ContacttoolBrandID.Int64 != int64(contactBrandId) {
+		v.ContacttoolBrandID.Int64 = int64(contactBrandId)
+		v.ContacttoolBrandName.String = contactBrandName
+		changeSatus = true
+	}
+	if changeSatus {
+		db.Save(v)
 	}
 }
 
