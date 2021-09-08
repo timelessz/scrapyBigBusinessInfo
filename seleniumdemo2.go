@@ -23,7 +23,8 @@ func getWebDriver() (*selenium.Service, selenium.WebDriver) {
 	caps := selenium.Capabilities{"browserName": "chrome"}
 	//禁止图片加载，加快渲染速度
 	imagCaps := map[string]interface{}{
-		"profile.managed_default_content_settings.images": 2,
+		"profile.managed_default_content_settings.images":     2,
+		"profile.managed_default_content_settings.javascript": 2,
 	}
 	chromeCaps := chrome.Capabilities{
 		Prefs: imagCaps,
