@@ -33,10 +33,10 @@ func GetCrmInstance() *MysqlCrmConnectiPool {
 * @fuc 初始化数据库连接(可在mail()适当位置调用)
  */
 func (m *MysqlCrmConnectiPool) InitCrmDataPool() (issucc bool) {
-	var MysqlHost string = "rdsfjnifbfjnifbo.mysql.rds.aliyuncs.com"
-	var MysqlDbname string = "salesmenbeta2"
-	var MysqLUser string = "salesmen"
-	var MysqlPasswd string = "qiangbi123"
+	var MysqlHost string = ""
+	var MysqlDbname string = ""
+	var MysqLUser string = ""
+	var MysqlPasswd string = ""
 	linkStr := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8&parseTime=True&loc=Local", MysqLUser, MysqlPasswd, MysqlHost, MysqlDbname)
 	crmDb, crmErrDb = gorm.Open("mysql", linkStr)
 	crmDb.SingularTable(true)
